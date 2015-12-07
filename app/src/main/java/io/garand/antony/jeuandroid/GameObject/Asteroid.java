@@ -1,6 +1,7 @@
 package io.garand.antony.jeuandroid. GameObject;
 
 import io.garand.antony.framework.Image;
+import io.garand.antony.framework.Sound;
 import io.garand.antony.jeuandroid.Misc.Assets;
 import io.garand.antony.jeuandroid.Misc.Vector2f;
 
@@ -12,20 +13,12 @@ public class Asteroid extends Living{
     private float   rotationValue,
                     rotationSpeed;
 
-    public Asteroid(Image sprite, int _health) {
+    public AsteroidController controller;
+
+    public Asteroid(Image sprite, int _health, AsteroidController _controler) {
         super(sprite);
         health = _health;
-    }
-
-    @Override
-    protected void die() {
-    }
-
-    public void reset(Vector2f _position, Vector2f _direction, float rotation, Image _sprite){
-        position = _position;
-        direction = _direction;
-        rotationValue = rotation;
-        sprite = _sprite;
+        controller = _controler;
     }
 
     public float getRotation(){
@@ -43,12 +36,16 @@ public class Asteroid extends Living{
             rotationValue %= 360;
         }
 
-        if(position.x > Assets.screenWidth || position.x <= -5){
+        if(position.x > Assets.screenWidth){
             position.x %= Assets.screenWidth;
+        } else if(position.x <= -5){
+            position.x = Assets.screenWidth;
         }
 
         if(position.y > Assets.screenHeight){
             die();
+            //Player let an asteroid pass
+            Assets.data.currentLevel.removeLives();
         }
     }
 
@@ -60,4 +57,15 @@ public class Asteroid extends Living{
         sprite = _sprite;
     }
 
+    @Override
+    protected void die() {
+        controller.asteroidDeath(this);
+    }
+
+    public Vector2f getMidPosition(){
+        Vector2f midPos = new Vector2f(position.x, position.y);
+        midPos.x += sprite.getWidth() / 2;
+        midPos.y += sprite.getHeight() / 2;
+        return midPos;
+    }
 }

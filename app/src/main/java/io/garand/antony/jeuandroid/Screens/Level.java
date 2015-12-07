@@ -4,6 +4,8 @@ package io.garand.antony.jeuandroid.Screens;
  * Created by Antony on 2015-11-27.
  */
 
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.Log;
 
@@ -11,12 +13,14 @@ import io.garand.antony.framework.Game;
 import io.garand.antony.framework.Graphics;
 import io.garand.antony.framework.Image;
 import io.garand.antony.framework.Input;
-import io.garand.antony.framework.Pool.PoolObjectFactory;
+import io.garand.antony.framework.Music;
 import io.garand.antony.framework.Screen;
 import io.garand.antony.framework.Graphics.ImageFormat;
 import io.garand.antony.framework.implementation.AndroidGraphics;
+import io.garand.antony.framework.implementation.AndroidMusic;
 import io.garand.antony.jeuandroid.GameObject.AsteroidController;
 import io.garand.antony.jeuandroid.GameObject.Background;
+import io.garand.antony.jeuandroid.GameObject.BulletController;
 import io.garand.antony.jeuandroid.GameObject.EnemyController;
 import io.garand.antony.jeuandroid.GameObject.PlayerController;
 import io.garand.antony.jeuandroid.Misc.Assets;
@@ -43,7 +47,9 @@ public class Level extends Screen {
             enemyRemainingCount,
             enemyCap,
 
-            currentLevel;
+            currentLevel,
+            score,
+            lives;
 
     float   timeToNextEnemy,
             enemySpawnRate,
@@ -53,8 +59,11 @@ public class Level extends Screen {
             buttonRight,
             buttonShoot;
 
+    Paint scorePaint;
+
     AsteroidController asteroidController;
 
+    //Todo: Set these in enemy controller
     List<EnemyController>   enemyPoolFree,
                             enemyPoolUsed;
 
@@ -63,6 +72,8 @@ public class Level extends Screen {
     Background cloud;
 
     Random rnd;
+
+    Music bgMusic;
 
     public Level(Game game) {
         super(game);
@@ -85,15 +96,21 @@ public class Level extends Screen {
 
         Image asteroidSprite = g.newImage("BackgroundSmoke.png", ImageFormat.ARGB4444);
 
-        Assets.data.player = new PlayerController(g.newImage("ship.png", ImageFormat.ARGB4444));
+        Assets.data.player = new PlayerController(g.newImage("ship.png", ImageFormat.ARGB4444),  g.newImage("bullet.png", Graphics.ImageFormat.ARGB4444), game.getAudio().createSound("shoot.wav"));
 
         //Image _sprite, Vector2 _position, Vector2 _size
         buttonLeft = new Button(g.newImage("left.png", ImageFormat.ARGB8888), new Vector2(35, 600), new Vector2(150,100));
         buttonRight = new Button(g.newImage("right.png", ImageFormat.ARGB8888), new Vector2(200, 600), new Vector2(150,100));
+        buttonShoot = new Button(g.newImage("shoot.png", ImageFormat.ARGB8888), new Vector2(1150, 600), new Vector2(100,100));
     }
 
     private void createLevel(){
+        Assets.data.currentLevel = this;
+
         state = gameState.Playing;
+        bgMusic = game.getAudio().createMusic("bgMusic.mp3");
+        bgMusic.setLooping(true);
+        bgMusic.play();
         //TODO: Dynamic seed
         // A seed is used for the futur replay potential
         rnd = new Random(42);
@@ -101,6 +118,7 @@ public class Level extends Screen {
         int enemyPerLevel = 5;
         int asteroidRatio = 2;
         enemyCap = 10;
+        lives = 3;
 
         //Not level 5 or 10
         if(currentLevel % 5 != 0){
@@ -111,21 +129,27 @@ public class Level extends Screen {
         else if(currentLevel % 10 == 0){
             //TODO: Boss
         }
-        //Level 5+10x
+        //Level 5+10x#Filter:2
         else{
             enemyCount = 0;
         }
         enemyRemainingCount = enemyCount;
         enemyAliveCount = 0;
 
-        asteroidController = new AsteroidController((AndroidGraphics)game.getGraphics(), currentLevel);
-
+        asteroidController = new AsteroidController((AndroidGraphics)game.getGraphics(), currentLevel, game.getAudio().createSound("explosion.wav"));
+        Assets.data.bulletController = new BulletController((AndroidGraphics) game.getGraphics());
         enemySpawnRate = 100f + (400f / currentLevel);
 
         timeToNextEnemy = enemySpawnRate + rnd.nextFloat();
 
         enemyPoolFree = new ArrayList<>();
         enemyPoolUsed = new ArrayList<>();
+
+        scorePaint = new Paint();
+        scorePaint.setTextSize(50);
+        scorePaint.setTextAlign(Paint.Align.LEFT);
+        scorePaint.setAntiAlias(true);
+        scorePaint.setColor(Color.WHITE);
     }
 
     private void checkButtons(float deltaTime){
@@ -138,6 +162,9 @@ public class Level extends Screen {
             }
             else if (Functions.checkButton(event, buttonRight)) {
                 Assets.data.player.moveRight(deltaTime);
+            }
+            else if(Functions.checkButton(event, buttonShoot)) {
+                Assets.data.player.shoot();
             }
 
         }
@@ -159,8 +186,12 @@ public class Level extends Screen {
         //Updating the player
         Assets.data.player.update(deltaTime);
 
+        //Updating the bullets
+        Assets.data.bulletController.update(deltaTime);
+
         //Updating the background
         cloud.update(deltaTime);
+        asteroidController.update(deltaTime);
     }
 
     void spawnEnemy(){
@@ -170,8 +201,7 @@ public class Level extends Screen {
 
     //Todo: Remove? Or keep for boss?
     void spawnAsteroid(){
-
-        asteroidController.spawnAsteroid();
+        requestAsteroid();
     }
 
 
@@ -187,6 +217,8 @@ public class Level extends Screen {
         g.drawImage(cloud.sprite, (int)cloud.getPosition().x,(int) cloud.getPosition().y - cloud.sprite.getHeight());
 
         //2. Draw projectiles
+        Assets.data.bulletController.paint();
+
         //3. Draw ennemies
 
         //3.1: Asteroids
@@ -201,6 +233,11 @@ public class Level extends Screen {
         //5. Draw UI
         g.drawImage(buttonLeft.sprite, buttonLeft.position.x, buttonLeft.position.y);
         g.drawImage(buttonRight.sprite, buttonRight.position.x, buttonRight.position.y);
+        g.drawImage(buttonShoot.sprite, buttonShoot.position.x, buttonShoot.position.y);
+
+        g.drawString("Score: " + score, 50, 70, scorePaint);
+        g.drawString("Lives: " + lives, 900, 70, scorePaint);
+
 
     }
 
@@ -228,7 +265,21 @@ public class Level extends Screen {
         asteroidController.spawnAsteroid();
     }
 
-    public void enemyDeath(){
-        enemyAliveCount--;
+    public void addScore(){
+        score++;
+    }
+
+    public void addScore(int _score){
+        score += _score;
+    }
+
+    public void removeLives(){
+        lives--;
+        if(lives <= 0){
+            //Todo: Save highscoreà
+
+            Graphics g = game.getGraphics();
+            game.setScreen(new MainMenu(game, g.newImage("buttonPlay.png", ImageFormat.ARGB4444),g.newImage("buttonHighscore.png", ImageFormat.ARGB4444)));
+        }
     }
 }

@@ -30,7 +30,7 @@ public final class Functions {
         return distBetweenPoints(event.x, event.y, x, y) < radius;
     }
 
-    private static float distBetweenPoints(int x1, int y1, int x2, int y2){
+    public static float distBetweenPoints(int x1, int y1, int x2, int y2){
         //Pythagore
         return (float)Math.sqrt((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2));
     }

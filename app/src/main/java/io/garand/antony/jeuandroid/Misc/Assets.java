@@ -6,6 +6,7 @@ package io.garand.antony.jeuandroid.Misc;
 import io.garand.antony.framework.Image;
 import io.garand.antony.framework.Music;
 import io.garand.antony.framework.Sound;
+import io.garand.antony.jeuandroid.GameObject.BulletController;
 import io.garand.antony.jeuandroid.GameObject.Player;
 import io.garand.antony.jeuandroid.GameObject.PlayerController;
 import io.garand.antony.jeuandroid.Screens.Level;
@@ -27,5 +28,7 @@ public class Assets {
     public Level currentLevel;
 
     public PlayerController player;
+
+    public BulletController bulletController;
 
 }

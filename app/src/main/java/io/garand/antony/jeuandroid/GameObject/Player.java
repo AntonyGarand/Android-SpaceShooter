@@ -8,9 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.garand.antony.framework.Graphics;
 import io.garand.antony.framework.Image;
+import io.garand.antony.framework.Sound;
+import io.garand.antony.framework.implementation.AndroidGraphics;
 import io.garand.antony.jeuandroid.Misc.Animation;
 import io.garand.antony.jeuandroid.Misc.Assets;
+import io.garand.antony.jeuandroid.Misc.Vector2;
 import io.garand.antony.jeuandroid.Misc.Vector2f;
 
 /**
@@ -22,29 +26,44 @@ public class Player extends Living{
     Animation[] animations;
     Animation currentAnimation;
 
-    List<Bullet> bulletPool;
-    List<Bullet> bulletShot;
-
     float accelerationSpeed,
             speedCap,
             resistance,
             timeSinceLastMoved,
-            delayToStopMove;
+            delayToStopMove,
 
-    boolean isMoving;
+            timeToNextBullet,
+            bulletDelay;
 
-    public Player(Image spriteSheet){
+    Vector2 bulletSpawnPosition;
+
+    boolean isMoving,
+            canShoot;
+
+    Image bulletSprite;
+
+    Sound shootSound;
+
+    public Player(Image spriteSheet, Image _bulletSprite, Sound _shootSound){
         //TODO: Not hardcoded spawn position?
         super(spriteSheet, new Vector2f(605, 550));
+
         health = 5;
-        bulletPool = new ArrayList<Bullet>();
-        bulletShot = new ArrayList<Bullet>();
         loadAnimations(spriteSheet);
         accelerationSpeed = 0.3f;
         speedCap = 10f;
         resistance = 1f;
         timeSinceLastMoved = 0f;
         delayToStopMove = 7f;
+
+        canShoot = true;
+        timeToNextBullet = 0f;
+        bulletDelay = 15f;
+        shootSound = _shootSound;
+
+        //Todo: Pass image in constructor
+        bulletSprite = _bulletSprite;
+        bulletSpawnPosition = new Vector2(20,0);
 
     }
 
@@ -109,16 +128,21 @@ public class Player extends Living{
             }
         }
         else {
-            Log.d("Player", "Is moving");
             timeSinceLastMoved += deltaTime;
             if(timeSinceLastMoved > delayToStopMove){
-
-                Log.d("Player", "Stopped moving");
                 isMoving = false;
             }
         }
 
         currentAnimation.update(deltaTime);
+
+
+        if(!canShoot){
+            timeToNextBullet -= deltaTime;
+            if(timeToNextBullet <= 0){
+                canShoot = true;
+            }
+        }
     }
 
     @Override
@@ -127,7 +151,6 @@ public class Player extends Living{
     }
 
     public void moveLeft(float deltaTime){
-        Log.d("Player", "Move left");
         direction.x -=accelerationSpeed * deltaTime;
         if(direction.x < -speedCap){
             direction.x = -speedCap;
@@ -136,7 +159,6 @@ public class Player extends Living{
         isMoving();
     }
     public void moveRight(float deltaTime){
-        Log.d("Player", "Move right");
         direction.x +=accelerationSpeed * deltaTime;
         if(direction.x > speedCap){
             direction.x = speedCap;
@@ -158,5 +180,17 @@ public class Player extends Living{
         return currentAnimation.currentRectangle();
     }
 
+    public void shoot(){
+        if(canShoot){
+            canShoot = false;
+            timeToNextBullet = bulletDelay;
+            spawnBullet();
+        }
+    }
+
+    void spawnBullet(){
+        Assets.data.bulletController.spawnBullet(bulletSprite, new Vector2f(position.x + bulletSpawnPosition.x, position.y), new Vector2f(0f, -5f));
+        shootSound.play(1f);
+    }
 
 }

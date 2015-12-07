@@ -7,7 +7,7 @@ import io.garand.antony.jeuandroid.Misc.Vector2f;
 /**
  * Created by Antony on 2015-11-27.
  */
-public abstract class Living extends GameObject {
+public abstract class Living extends GameObject{
     protected int health;
 
     public Living(Image sprite){

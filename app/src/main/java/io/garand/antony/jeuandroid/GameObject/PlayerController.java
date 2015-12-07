@@ -3,6 +3,8 @@ package io.garand.antony.jeuandroid. GameObject;
 import android.graphics.Rect;
 
 import io.garand.antony.framework.Image;
+import io.garand.antony.framework.Sound;
+import io.garand.antony.framework.implementation.AndroidGraphics;
 import io.garand.antony.jeuandroid.Misc.Assets;
 import io.garand.antony.jeuandroid.Misc.Vector2;
 import io.garand.antony.jeuandroid.Misc.Vector2f;
@@ -14,9 +16,9 @@ public class PlayerController {
 
     Player player;
 
-    public PlayerController(Image sprite){
+    public PlayerController(Image sprite, Image bulletSprite, Sound shootSound){
         if(player == null){
-            player = new Player(sprite);
+            player = new Player(sprite, bulletSprite, shootSound);
         }
         Assets.data.player = this;
     }
@@ -62,6 +64,10 @@ public class PlayerController {
         else{
             return null;
         }
+    }
+
+    public void shoot(){
+        player.shoot();
     }
 
 }

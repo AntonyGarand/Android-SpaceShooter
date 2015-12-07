@@ -49,12 +49,13 @@ public class MainMenu extends Screen {
                     if (Functions.checkButton(event, playButton)) {
                         play();
                     }
-
-
+                    else if(Functions.checkButton(event, highscoreButton)){
+                        highscore();
+                    }
                 }
             }
             catch(IndexOutOfBoundsException ex){
-                Log.e("MainMenu", "Touch out of bound!");
+                Log.e("MainMenu", "Touch out of bound! Wtf?");
             }
         }
     }
@@ -97,8 +98,9 @@ public class MainMenu extends Screen {
         game.setScreen(new Level(game));
     }
 
-    public void onHighscore(){
-        //TODO: Load highscore
+    public void highscore(){
+        Log.d("Menu", "Pressed the Highscore button");
+        game.setScreen(new Highscore(game));
     }
 
 }
