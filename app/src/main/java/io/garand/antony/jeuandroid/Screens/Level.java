@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.Log;
 
+import antony.garand.io.demoapp.R;
 import io.garand.antony.framework.Game;
 import io.garand.antony.framework.Graphics;
 import io.garand.antony.framework.Image;
@@ -16,6 +17,7 @@ import io.garand.antony.framework.Input;
 import io.garand.antony.framework.Music;
 import io.garand.antony.framework.Screen;
 import io.garand.antony.framework.Graphics.ImageFormat;
+import io.garand.antony.framework.implementation.AndroidGame;
 import io.garand.antony.framework.implementation.AndroidGraphics;
 import io.garand.antony.framework.implementation.AndroidMusic;
 import io.garand.antony.jeuandroid.GameObject.AsteroidController;
@@ -58,6 +60,9 @@ public class Level extends Screen {
     Button  buttonLeft,
             buttonRight,
             buttonShoot;
+
+    String  scoreStr,
+            livesStr;
 
     Paint scorePaint;
 
@@ -106,6 +111,10 @@ public class Level extends Screen {
 
     private void createLevel(){
         Assets.data.currentLevel = this;
+
+        AndroidGame game = (AndroidGame)this.game;
+        livesStr = game.getContext().getResources().getString(R.string.lives);
+        scoreStr = game.getContext().getResources().getString(R.string.score);
 
         state = gameState.Playing;
         bgMusic = game.getAudio().createMusic("bgMusic.mp3");
@@ -171,6 +180,7 @@ public class Level extends Screen {
     }
 
     public void playerDeath(){
+        Assets.data.highscoreDB.addScore(score);
         state = gameState.Dead;
     }
 
@@ -235,8 +245,8 @@ public class Level extends Screen {
         g.drawImage(buttonRight.sprite, buttonRight.position.x, buttonRight.position.y);
         g.drawImage(buttonShoot.sprite, buttonShoot.position.x, buttonShoot.position.y);
 
-        g.drawString("Score: " + score, 50, 70, scorePaint);
-        g.drawString("Lives: " + lives, 900, 70, scorePaint);
+        g.drawString(scoreStr + " " + score, 50, 70, scorePaint);
+        g.drawString(livesStr + " " + lives, 900, 70, scorePaint);
 
 
     }
@@ -258,7 +268,7 @@ public class Level extends Screen {
 
     @Override
     public void backButton() {
-        state = gameState.Paused;
+        bgMusic.stop();
     }
 
     void requestAsteroid(){
@@ -276,8 +286,8 @@ public class Level extends Screen {
     public void removeLives(){
         lives--;
         if(lives <= 0){
-            //Todo: Save highscoreà
-
+            //Todo: Save highscore
+            playerDeath();
             Graphics g = game.getGraphics();
             game.setScreen(new MainMenu(game, g.newImage("buttonPlay.png", ImageFormat.ARGB4444),g.newImage("buttonHighscore.png", ImageFormat.ARGB4444)));
         }

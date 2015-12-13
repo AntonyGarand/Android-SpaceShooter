@@ -61,6 +61,9 @@ public abstract class AndroidGame extends Activity implements Game {
         wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "MyGame");
     }
 
+    public Context getContext(){
+        return getApplicationContext();
+    }
     @Override
     public void onResume() {
         super.onResume();

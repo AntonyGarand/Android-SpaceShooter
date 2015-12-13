@@ -11,11 +11,26 @@ import io.garand.antony.jeuandroid.GameObject.Player;
 import io.garand.antony.jeuandroid.GameObject.PlayerController;
 import io.garand.antony.jeuandroid.Screens.Level;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteCursor;
+import android.database.sqlite.SQLiteCursorDriver;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQuery;
+
 public class Assets {
 
     //Singleton class
     public static Assets data = new Assets();
-    private Assets(){}
+    private Assets(){
+
+    }
+    public static void startAssets(Context ctx){
+
+        data.highscoreDB = new HighscoreDatabase(ctx);
+
+    }
     /*
     * Main Menu / Loading Screen
     */
@@ -30,5 +45,8 @@ public class Assets {
     public PlayerController player;
 
     public BulletController bulletController;
+
+    public HighscoreDatabase highscoreDB;
+
 
 }
